@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Stub CLI for HAL starter. Expand to integrate your chat backend.
+set -e
+CMD="$1"
+shift || true
+case "$CMD" in
+  --warmup)
+    echo "HAL Quick Digest (from HAL.md):"
+    sed -n '1,40p' HAL.md
+    ;;
+  --chat)
+    echo "[stub] Chat would start here with system prompt from HAL.md"
+    ;;
+  --drift-check)
+    python3 tools/drift_check.py "$*"
+    ;;
+  *)
+    echo "Usage: bin/hal --warmup | --chat \"topic\" | --drift-check \"response\""
+    ;;
+esac

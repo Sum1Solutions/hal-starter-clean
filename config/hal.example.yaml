@@ -1,0 +1,8 @@
+# HAL config template
+backend: local  # or remote
+model: llama2:13b
+mcp_servers: []  # e.g., [{name: hal-repo, command: /path/to/python, args: [/path/to/mcp.py]}]
+rag_index: ./output/rag.index
+notes: |
+  Pin model tags/hashes for reproducibility.
+  If clinical/safety, keep crisis macro visible.
