@@ -1,8 +1,19 @@
-# HAL config template
-backend: local  # or remote
-model: llama2:13b
-mcp_servers: []  # e.g., [{name: hal-repo, command: /path/to/python, args: [/path/to/mcp.py]}]
+# HAL config template (non-secret settings)
+# Secrets (API keys) should be set via environment variables.
+
+# backend: anthropic | ollama
+backend: anthropic
+
+# Model names per backend
+anthropic_model: claude-3-haiku-20240307
+ollama_model: llama2:13b
+
+# Optional: MCP servers, RAG index path
+mcp_servers: []
 rag_index: ./output/rag.index
+
 notes: |
-  Pin model tags/hashes for reproducibility.
-  If clinical/safety, keep crisis macro visible.
+  Set API keys via environment variables (do not store in this file):
+    ANTHROPIC_API_KEY
+  For ollama, ensure the model is pulled locally. Pin model tags/hashes for reproducibility.
+  If clinical/safety, keep the crisis macro visible.

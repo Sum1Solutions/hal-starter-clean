@@ -9,9 +9,11 @@ Usage:
     bin/hal --chat "your prompt"
 """
 
+import os
 import subprocess
 import sys
 from pathlib import Path
+from typing import Optional
 
 try:
     import yaml
@@ -25,11 +27,17 @@ CONFIG_EXAMPLE = ROOT / "config" / "hal.example.yaml"
 
 
 def load_config():
-    cfg = {"backend": "local", "model": "llama2:13b"}
+    cfg = {
+        "backend": "anthropic",
+        "anthropic_model": "claude-3-haiku-20240307",
+        "ollama_model": "llama2:13b",
+    }
     path = CONFIG_PATH if CONFIG_PATH.exists() else CONFIG_EXAMPLE
     if yaml and path.exists():
         with open(path) as f:
-            cfg.update(yaml.safe_load(f) or {})
+            data = yaml.safe_load(f) or {}
+            if isinstance(data, dict):
+                cfg.update(data)
     return cfg
 
 
@@ -38,14 +46,54 @@ def load_system_prompt():
 
 
 def run_ollama(model: str, system: str, prompt: str):
-    cmd = ["ollama", "run", model, "--system", system, prompt]
+    # For ollama versions without --system, prepend system prompt.
+    combined = system.strip() + "\n\n" + prompt.strip()
+    cmd = ["ollama", "run", model]
     try:
-        res = subprocess.run(cmd, check=True, capture_output=True, text=True)
+        res = subprocess.run(cmd, input=combined, check=True, capture_output=True, text=True)
         return res.stdout.strip()
     except FileNotFoundError:
         return "[error] ollama not found; install or set backend differently"
     except subprocess.CalledProcessError as e:
         return f"[error] ollama failed: {e.stderr.strip()}"
+
+
+def run_anthropic(model: str, system: str, prompt: str):
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        return "[error] ANTHROPIC_API_KEY not set"
+    import http.client
+    import json
+
+    body = {
+        "model": model,
+        "max_tokens": 512,
+        "system": system,
+        "messages": [{"role": "user", "content": prompt}]
+    }
+
+    conn = http.client.HTTPSConnection("api.anthropic.com")
+    conn.request(
+        "POST",
+        "/v1/messages",
+        body=json.dumps(body),
+        headers={
+            "Content-Type": "application/json",
+            "x-api-key": api_key,
+            "anthropic-version": "2023-06-01",
+        },
+    )
+    resp = conn.getresponse()
+    data = resp.read()
+    if resp.status != 200:
+        return f"[error] anthropic {resp.status}: {data.decode()}"
+    parsed = json.loads(data)
+    # Expect content as list of blocks with type 'text'
+    chunks = []
+    for block in parsed.get("content", []):
+        if block.get("type") == "text":
+            chunks.append(block.get("text", ""))
+    return "\n".join(chunks).strip()
 
 
 def main():
@@ -56,13 +104,18 @@ def main():
     user_prompt = " ".join(sys.argv[1:])
     cfg = load_config()
     system = load_system_prompt()
+    backend = cfg.get("backend", "anthropic")
 
-    if cfg.get("backend") == "local":
-        model = cfg.get("model", "llama2:13b")
+    if backend == "ollama":
+        model = cfg.get("ollama_model", "llama2:13b")
         response = run_ollama(model, system, user_prompt)
         print(response)
+    elif backend == "anthropic":
+        model = cfg.get("anthropic_model", "claude-3-haiku-20240307")
+        response = run_anthropic(model, system, user_prompt)
+        print(response)
     else:
-        print("[info] Only local (ollama) backend stubbed; set backend: local in config/hal.yaml")
+        print(f"[info] Unsupported backend '{backend}'. Set backend: anthropic|ollama in config/hal.yaml")
 
 
 if __name__ == "__main__":
