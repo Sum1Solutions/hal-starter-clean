@@ -18,7 +18,7 @@ def test_warmup_output_contains_hal():
     proc = run(f"cd {ROOT} && ./bin/hal --warmup")
     assert proc.returncode == 0
     out = proc.stdout.lower()
-    assert "hal" in out and "a = p" in out and "notice" in out
+    assert "hal" in out and "a = p - i" in out and "notice" in out
 
 
 def test_drift_checker_runs():
