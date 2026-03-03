@@ -9,12 +9,12 @@ case "$CMD" in
     sed -n '1,40p' HAL.md
     ;;
   --chat)
-    echo "[stub] Chat would start here with system prompt from HAL.md"
+    python3 bin/hal_chat.py "$@"
     ;;
   --drift-check)
     python3 tools/drift_check.py "$*"
     ;;
   *)
-    echo "Usage: bin/hal --warmup | --chat \"topic\" | --drift-check \"response\""
+    echo "Usage: bin/hal --warmup | --chat \"prompt\" | --drift-check \"response\""
     ;;
 esac
