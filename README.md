@@ -32,4 +32,10 @@ Notes: keep prompts neutral/concise; state uncertainty plainly. If clinical/safe
 ### Chat backend note
 - `bin/hal --chat` shells out to `ollama run <model>` with the HAL system prompt. Some Ollama versions do not support `--system`; you may need to adapt the wrapper (e.g., prepend system prompt to user prompt) or use an API that supports system messages. Backend is local-only stub; extend for remote models as needed.
 
+### Backends and setup
+- **Anthropic (default):** set `ANTHROPIC_API_KEY` in your environment. Model in `config/hal.yaml` (default `claude-3-haiku-20240307`).
+- **Ollama (local fallback):** pull models you want (`ollama pull llama2:13b` etc.). The wrapper prepends HAL prompt; tested with `llama2:13b`, `tinyllama:latest`, `stablelm2:1.6b`, `qwen2:1.5b` (adjust `ollama_model` in config). No API key needed.
+
+Note: Keep secrets out of YAML; use env vars for API keys.
+
 *ε > 0*
