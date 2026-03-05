@@ -19,6 +19,12 @@ bin/hal --warmup   # show HAL digest, crisis/scope if applicable
 
 # 3) Chat
 bin/hal --chat "topic"   # starts a session with HAL system prompt
+
+# 4) Drift check (optional)
+bin/hal --drift-check "response text"   # marker-based drift scan
+
+# 5) Tests (smoke)
+python3 tests/test_chat_stub.py
 ```
 
 ## Files
